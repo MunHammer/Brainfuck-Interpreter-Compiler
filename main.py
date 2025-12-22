@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import FileMan
-import Interpreter-Compiler as Run
+import Interpreter_Compiler as Run
 
 if __name__ == '__main__':
     FileMan.dirchoose()
