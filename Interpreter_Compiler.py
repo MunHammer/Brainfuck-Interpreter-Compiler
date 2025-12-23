@@ -15,7 +15,6 @@ def numByte(integer: str | int) -> str:
 
 
 def Byte(program: str) -> str:
-    chars = []
     result = ''
     # [  0
     # ]  1
@@ -181,76 +180,233 @@ def debug_Interpret(program: str) -> str:
     return Interpret(Byte(program), write_to_file=True)
 
 
-def Compile(program: str, file=None) -> None:
-    CPPresult = '#include <iostream>\nusing namespace std;\n'
-    CPPresult += 'int main() {\n    int tape[30000]={0};\n    int ptr=0;\n    int out;\n'
-    PYresult = [0, 'tape=[0]*30000\nptr=0\n']
-    # removes non-valid characters
-    program = re.sub(r'[^+-.><\]\[]', '', program)
-    while program[0] == '[':  # removes standard opening comments
-        depth = 1
+class Compiler:
+    def __init__(self, *, indent: bool = True,
+                 autosemicolon: bool = False, autonewline: bool = True):
+        self.__autoindent = indent
+        self.__semicolon = autosemicolon
+        self.__newline = autonewline
+        self.__opening = ''
+        self.__closing = {}
+        self.__indent = 0
+        self.__commands = {'[': None, ']': None, '.': None,
+                           ',': None, '+': None, '-': None,
+                           '>': None, '<': None, '#': None,
+                           'check': None}
+
+    def get_opening(self) -> str:
+        return self.__opening
+
+    def add_opening(self, compiled: str, *, semicolon: bool = True,
+                    newline: bool = True, autoindent: bool = True,
+                    add_indent: int = 0):
+        '''change the booleans if there are exceptions to
+        rules in the opening'''
+        self.__opening += compiled
+        self.__indent += add_indent
+        if self.__semicolon and semicolon:
+            self.__opening += ';'
+        if self.__newline and newline:
+            self.__opening += '\n'
+        if self.__autoindent and autoindent:
+            self.__opening += '    ' * self.__indent
+
+    def get_closing(self) -> dict:
+        return self.__closing
+
+    def add_closing(self, compiled: str, *, semicolon: bool = True,
+                    newline: bool = True, autoindent: bool = True,
+                    add_indent: int = 0):
+        '''change the booleans if there are exceptions to
+        rules in the closing'''
+        self.__closing[compiled] = {'semicolon': semicolon, 'newline': newline,
+                                    'autoindent': autoindent,
+                                    'add_indent': add_indent}
+
+    def __eval_closing(self, string: str, options: dict):
+        if self.__autoindent and options['autoindent']:
+            self.result += '    ' * self.__indent
+        self.__indent += options['add_indent']
+        self.result += string
+        if self.__newline and options['newline']:
+            self.result += '\n'
+
+    def add_command(self, command: str, compiled: str, *,
+                    overwrite: bool = False):
+        '''For a command such as + that can be repeated quite easily,
+        you must use: {Num} to produce more optimised code'''
+        match command:
+            case '[' if self.__commands['['] is None or overwrite:
+                self.__commands['['] = compiled
+            case ']' if self.__commands[']'] is None or overwrite:
+                self.__commands[']'] = compiled
+            case '.' if self.__commands['.'] is None or overwrite:
+                self.__commands['.'] = compiled
+            case ',' if self.__commands[','] is None or overwrite:
+                self.__commands[','] = compiled
+            case '+' if self.__commands['+'] is None or overwrite:
+                self.__commands['+'] = compiled
+            case '-' if self.__commands['-'] is None or overwrite:
+                self.__commands['-'] = compiled
+            case '>' if self.__commands['>'] is None or overwrite:
+                self.__commands['>'] = compiled
+            case '<' if self.__commands['<'] is None or overwrite:
+                self.__commands['<'] = compiled
+            case '#' if self.__commands['#'] is None or overwrite:
+                self.__commands['#'] = compiled
+            case 'check' if self.__commands['check'] is None or overwrite:
+                self.__commands['check'] = compiled
+            case _:
+                raise ValueError('Class method: add_command() requires '
+                                 'a valid command to be entered or you '
+                                 'entered a command that has already been'
+                                 ' created, if so, please use use the '
+                                 'overwrite flag if that was intentional')
+
+    def __check_add(self):
+        if self.__semicolon:
+            self.result += ';'
+        if self.__newline:
+            self.result += '\n'
+        if self.__autoindent:
+            self.result += ' ' * 4 * self.__indent
+        self.result += self.__commands['check']
+
+    def run(self, bytecode: str, debug: bool = False):
+        if len(bytecode) % 8 != 0:
+            raise ValueError('Must be bytecode inputted')
+        self.bytecode = bytecode
+        self.result = self.__opening
+        for command in self.__commands:
+            if self.__commands[command] == None:
+                raise ValueError('All commands must be added\n'
+                                 f'Missing command: {command}')
         while True:
-            program = program[1:]
-            if len(program) == 0:
-                raise Exception('Program is 100% comments')
-            if program[0] == ']':
-                depth -= 1
-            elif program[0] == '[':
-                depth += 1
-            if depth == 0:
-                program = program[1:]
+            self.curbyte = int(self.bytecode[:8], 2)
+            if self.curbyte == 0:
+                self.result += self.__commands['[']
+                self.__indent += 1
+            elif self.curbyte == 1:
+                self.result += self.__commands[']']
+                self.__indent -= 1
+            elif self.curbyte == 2:
+                self.result += self.__commands['.']
+            elif self.curbyte == 3:
+                self.result += self.__commands[',']
+            elif self.curbyte in range(4, 67):
+                self.result += self.__commands['+'].format(
+                    Num=f'{self.curbyte - 3}')
+                self.__check_add()
+            elif self.curbyte in range(67, 130):
+                self.result += self.__commands['-'].format(
+                    Num=f'{self.curbyte - 66}')
+                self.__check_add()
+            elif self.curbyte in range(130, 193):
+                self.result += self.__commands['>'].format(
+                    Num=f'{self.curbyte - 129}')
+                self.__check_add()
+            elif self.curbyte in range(193, 255):
+                self.result += self.__commands['<'].format(
+                    Num=f'{self.curbyte - 192}')
+                self.__check_add()
+            elif self.curbyte == 255:
+                self.result += self.__commands['#']
+            self.bytecode = self.bytecode[8:]
+            if self.__semicolon:
+                self.result += ';'
+            if self.__newline:
+                self.result += '\n'
+            if self.__autoindent:
+                self.result += ' ' * 4 * self.__indent
+            if len(self.bytecode) < 8:
                 break
-    depth = 0
-    for char in program:
-        if char == '[':
-            depth += 1
-        elif char == ']':
-            depth -= 1
-    if depth != 0:
-        raise Exception('Unmatched loop')
-    while True:
-        match program[0]:
-            case '[':
-                PYresult[1] += 'while tape[ptr] != 0:'
-                PYresult[0] += 1
-                CPPresult += 'while (tape[ptr] != 0) {'
-            case ']':
-                PYresult[0] -= 1
-                CPPresult += '}'
-            case '+':
-                length = len(re.search(r'^[+]+', program).group())
-                PYresult[1] += f'tape[ptr] += {length}'
-                CPPresult += f'tape[ptr] += {length};'
-                program = program[length - 1:]
-            case '-':
-                length = len(re.search(r'^[-]+', program).group())
-                PYresult[1] += f'tape[ptr] -= {length}'
-                CPPresult += f'tape[ptr] -= {length};'
-                program = program[length - 1:]
-            case '>':
-                length = len(re.search(r'^[>]+', program).group())
-                PYresult[1] += f'ptr += {length}'
-                CPPresult += f'ptr += {length};'
-                program = program[length - 1:]
-            case '<':
-                length = len(re.search(r'^[<]+', program).group())
-                PYresult[1] += f'ptr -= {length}'
-                CPPresult += f'ptr -= {length};'
-                program = program[length - 1:]
-            case '.':
-                PYresult[1] += 'print(end=chr(tape[ptr]))'
-                CPPresult += 'cout << char(tape[ptr]);'
-            case ',':
-                PYresult[1] += 'tape[ptr]=ord(input()[0])'
-                CPPresult += 'cin >> tape[ptr];'
-        PYresult[1] += '\n' + ' ' * 4 * PYresult[0]
-        CPPresult += '\n' + ' ' * 4 * (PYresult[0] + 1)
-        program = program[1:]
-        if len(program) == 0:
-            break
-    CPPresult += 'return 0;\n}'
-    if file != None:
-        with open(f'{file}.py', 'w') as f:
-            f.write(PYresult[1])
-        with open(f'{file}.cpp', 'w') as f:
-            f.write(CPPresult)
+            if debug:
+                # yield self.result
+                print(self.result)
+        for closing in self.__closing:
+            self.__eval_closing(closing, self.__closing[closing])
+        return self.result
+
+
+def makeCPP():
+    CPPcompiler = Compiler(autosemicolon=True)
+    CPPcompiler.add_opening('#include <iostream>',
+                            semicolon=False)
+    CPPcompiler.add_opening('#include <stdexcept>',
+                            semicolon=False)
+    CPPcompiler.add_opening('using namespace std')
+    CPPcompiler.add_opening('int check(int ptr, int cell) {',
+                            add_indent=1, semicolon=False)
+    CPPcompiler.add_opening('if (ptr < 0 or ptr > 30000) {',
+                            add_indent=1, semicolon=False)
+    CPPcompiler.add_opening('throw out_of_range("No negative cells or cells '
+                            '> 30,''000 exist")', add_indent=-1)
+    CPPcompiler.add_opening('}',
+                            semicolon=False)
+    CPPcompiler.add_opening('while (cell > 255) {',
+                            add_indent=1, semicolon=False)
+    CPPcompiler.add_opening('cell -= 256', add_indent=-1)
+    CPPcompiler.add_opening('}',
+                            semicolon=False)
+    CPPcompiler.add_opening('while (cell < 0) {',
+                            add_indent=1, semicolon=False)
+    CPPcompiler.add_opening('cell += 256', add_indent=-1)
+    CPPcompiler.add_opening('}',
+                            semicolon=False)
+    CPPcompiler.add_opening('return cell', add_indent=-1)
+    CPPcompiler.add_opening('}',
+                            semicolon=False)
+    CPPcompiler.add_opening('int main {',
+                            semicolon=False, add_indent=1)
+    CPPcompiler.add_opening('int tape[30000]={0}')
+    CPPcompiler.add_opening('int ptr = 0')
+
+    CPPcompiler.add_command('[', compiled='while (tape[ptr] != 0) {')
+    CPPcompiler.add_command(']', compiled='}')
+    CPPcompiler.add_command('.', compiled='cout << char(tape[ptr])')
+    CPPcompiler.add_command(',', compiled='cin >> tape[ptr]')
+    CPPcompiler.add_command('+', compiled='tape[ptr] += {Num}')
+    CPPcompiler.add_command('-', compiled='tape[ptr] -= {Num}')
+    CPPcompiler.add_command('>', compiled='ptr += {Num}')
+    CPPcompiler.add_command('<', compiled='ptr += {Num}')
+    CPPcompiler.add_command('#', compiled='cout << tape')
+    CPPcompiler.add_command(
+        'check', compiled='tape[ptr] = check(ptr, tape[ptr])')
+
+    CPPcompiler.add_closing('return 0', add_indent=-1)
+    CPPcompiler.add_closing('}', semicolon=False)
+    return CPPcompiler
+
+
+def makePY():
+    PYcompiler = Compiler()
+    PYcompiler.add_opening('tape = [0]*30000')
+    PYcompiler.add_opening('ptr = 0')
+    PYcompiler.add_opening('def check():', add_indent=1)
+    PYcompiler.add_opening('if ptr > 30000 or < 0:', add_indent=1)
+    PYcompiler.add_opening('raise Exception("No memory adresses exist '
+                           'beyond 0 & 30,000")', add_indent=-1)
+    PYcompiler.add_opening('if tape[ptr] > 255:', add_indent=1)
+    PYcompiler.add_opening('tape[ptr] -= 256', add_indent=-1)
+    PYcompiler.add_opening('elif tape[ptr] < 0:', add_indent=1)
+    PYcompiler.add_opening('tape[ptr] += 256', add_indent=-2)
+
+    PYcompiler.add_command('[', 'while tape[ptr] != 0:')
+    PYcompiler.add_command(']', '')
+    PYcompiler.add_command('.', 'print(chr(tape[ptr]))')
+    PYcompiler.add_command(',', 'tape[ptr] = ord(input()[0])')
+    PYcompiler.add_command('+', 'tape[ptr] += {Num}')
+    PYcompiler.add_command('-', 'tape[ptr] -= {Num}')
+    PYcompiler.add_command('>', 'ptr -= {Num}')
+    PYcompiler.add_command('<', 'ptr += {Num}')
+    PYcompiler.add_command('#', 'print(tape)')
+    PYcompiler.add_command('check', 'check()')
+    return PYcompiler
+
+
+if __name__ == '__main__':
+    CPPcompiler = makeCPP()
+    PYcompiler = makePY()
+    print(CPPcompiler.run(Byte('+++++')))
+    print('-' * 10 + 'Same code in python:')
+    print(PYcompiler.run(Byte('+++++')))
