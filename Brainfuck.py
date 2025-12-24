@@ -12,10 +12,11 @@ if __name__ == '__main__':
                 compiler = BFCompiler.makeCPP()
             else:
                 raise ValueError('Language does not exist')
-            with open(sys.argv[4]) as file:
-                program = ''
-                for line in file:
-                    program += line
+            if sys.argv[4][-2:] == '.b' or sys.argv[4][-3:] == '.bf':
+                with open(sys.argv[3]) as file:
+                    program = ''
+                    for line in file:
+                        program += line
             print('Encoding & optimising program...')
             program = IR.full_IR(program)
             print(f'Turning code into a {sys.argv[3]} program')
