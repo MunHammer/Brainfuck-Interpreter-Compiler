@@ -12,3 +12,9 @@ Since I made the compiler a class, you could make it compile to your own languag
     1. If it will be compiling or interpreting (for interpreting, if you leave all other arguments blank, it'll be a REPL)
     1. The file it reads, or a small program to run/interpret
     2. The file it outputs it's results to, (if you leave this blank, it'll just print it out)
+
+###### Languages:
+The program can compile bf to:
+- C++
+- Python
+- Rust

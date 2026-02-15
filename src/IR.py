@@ -47,33 +47,34 @@ def IR(program: str, rmcomments: bool = True, input: str = '') -> str:
     while True:
         match program[0]:
             case '[':
-                result += f's'
+                result += 's'
             case ']':
-                result += f'e'
+                result += 'e'
             case '.':
-                result += f'o'
+                result += 'o'
             case ',':
-                result += f'o-'
+                result += 'o-'
             case '+':
-                result += f'i'
+                result += 'i'
             case '-':
-                result += f'i-'
+                result += 'i-'
             case '>':
-                result += f'm'
+                result += 'm'
             case '<':
-                result += f'm-'
+                result += 'm-'
             case '#':
                 result += 'd1'
             case _:
                 pass
-        length = re.search(f'^[{result[-1]}]+', program)
+        length = re.search(f'^[\{program[0]}]+', program)
         if length is None:
+            print(program)
             raise Exception(
                 'You may have changed the code in some way or run it in a version where it does not work')
         length = len(length.group())
         result += str(base_repr(length, 36))
-        program = program[length - 1:]
-        program = program[1:]
+        program = program[length:]
+        print(len(program))
         if len(program) == 0:
             break
     return result + f'!{input}'
@@ -84,13 +85,14 @@ def Pairstr(program: str) -> Tuple[list[Pair], str]:
     while True:
         if program[0] == '!':
             break
-        code = re.search('[^a-z]+', program[1:])
+        code = re.search('[^a-z!]+', program[1:])
         if code is None:
-            raise Exception(
-                "Please don't change the code or run it in incompatible versions")
+            print(program)
+            break
+        length = len(code.group())
         code = Pair(program[0], int(code.group(), 36))
         out.append(code)
-        program = program[code.num + 1:]
+        program = program[length + 1:]
     return out, program[1:]
 
 
@@ -117,6 +119,8 @@ def OptimizePairsP1(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
 
 
 def OptimizePairsP2(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
+    for thing in arg[0]:
+        print(thing.type, thing.num)
     program = arg[0]
     tape = [0]*30000
     ptr: int = 0
@@ -171,6 +175,7 @@ def OptimizePairsP2(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
             case 'd':
                 pass
             case _:
+                print(code.type)
                 raise Exception('Invalid IR')
         pos += 1
         if pos > len(program) - 1:

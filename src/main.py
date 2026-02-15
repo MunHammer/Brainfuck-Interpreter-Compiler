@@ -10,10 +10,12 @@ if __name__ == '__main__':
                 compiler = BFCompiler.makePY()
             elif sys.argv[3].lower() == 'cpp':
                 compiler = BFCompiler.makeCPP()
+            elif sys.argv[3].lower() == 'rust':
+                compiler = BFCompiler.makeRust()
             else:
                 raise ValueError('Language does not exist')
             if sys.argv[4][-2:] == '.b' or sys.argv[4][-3:] == '.bf':
-                with open(sys.argv[3]) as file:
+                with open(sys.argv[4]) as file:
                     program = ''
                     for line in file:
                         program += line

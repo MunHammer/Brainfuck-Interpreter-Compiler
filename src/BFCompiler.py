@@ -29,12 +29,6 @@ class Compiler:
                                            ',': '', 'increment': '',
                                            'move': '', '#': '',
                                            'addcheck': '', 'movecheck': ''}
-        self.__closing = {}
-        self.__indent = indent
-        self.__commands = {'[': None, ']': None, '.': None,
-                           ',': None, 'increment': None,
-                           'move': None, '#': None,
-                           'addcheck': None, 'movecheck': None}
     def get_opening(self) -> str:
         return self.__opening
 
@@ -135,6 +129,9 @@ class Compiler:
                             self.__indent += 1
                             if self.__autoindent:
                                 self.result += '    ' * self.__indent
+                    except IndexError:
+                        self.result += self.__commands['[']
+                        self.__indent += 1
                 case 'e':
                     try:
                         self.__indent -= 1
@@ -147,6 +144,9 @@ class Compiler:
                             self.result += self.__commands[']']
                             if self.__autoindent:
                                 self.result += '    ' * self.__indent
+                    except IndexError:
+                        self.__indent -= 1
+                        self.result += self.__commands[']']
                 case 'o' if command.num > 0:
                     try:
                         self.result += self.__commands['.'].format(
@@ -156,6 +156,8 @@ class Compiler:
                             self.result += self.__commands['.']
                             if self.__autoindent:
                                 self.result += '    ' * self.__indent
+                    except IndexError:
+                        self.result += self.__commands['.']
                 case 'o' if command.num < 0:
                     try:
                         self.result += self.__commands[','].format(
@@ -165,6 +167,8 @@ class Compiler:
                             self.result += self.__commands[',']
                             if self.__autoindent:
                                 self.result += '    ' * self.__indent
+                    except IndexError:
+                        self.result += self.__commands[',']
                 case 'i':
                     self.result += self.__commands['increment'].format(
                         Num=command.num)
@@ -266,12 +270,44 @@ def makePY():
     PYcompiler.add_command('movecheck', 'movecheck()')
     return PYcompiler
 
+def makeRust():
+    Rustcompiler = Compiler(autosemicolon=True, indent=1)
+    Rustcompiler.add_opening('use std::io::{Read, Write}')
+    Rustcompiler.add_opening('fn inp(cell: &mut u8) {', semicolon=False)
+    Rustcompiler.add_opening('let mut buf: [u8;1] = [0]', indent=1)
+    Rustcompiler.add_opening('std::io::stdin().read_exact(&mut buf).unwrap()', indent=1)
+    Rustcompiler.add_opening('*cell = buf[0]', indent=1)
+    Rustcompiler.add_opening('}', semicolon=False)
+    Rustcompiler.add_opening('fn inc(cell: &mut u8, incrementation: i16) {', semicolon=False)
+    Rustcompiler.add_opening('if incrementation < 0 {', indent=1, semicolon=False)
+    Rustcompiler.add_opening('*cell = cell.wrapping_sub(incrementation as u8)', indent=2)
+    Rustcompiler.add_opening('} else {', indent=1, semicolon=False)
+    Rustcompiler.add_opening('*cell = cell.wrapping_add(incrementation as u8)')
+    Rustcompiler.add_opening('}', indent=1, semicolon=False)
+    Rustcompiler.add_opening('}', semicolon=False)
+    Rustcompiler.add_opening('fn main() {', semicolon=False)
+    Rustcompiler.add_opening('let mut tape: [u8; 30_000] = [0; 30_000]', indent=1)
+    Rustcompiler.add_opening('let mut ptr: usize = 0', indent=1)
+    Rustcompiler.add_command('[', 'while tape[ptr] != 0 {', autosemicolon=False)
+    Rustcompiler.add_command(']', '}', autosemicolon=False)
+    Rustcompiler.add_command('.', 'print!("{}", tape[ptr] as char); std::io::stdout().flush().unwrap()')
+    Rustcompiler.add_command(',', 'inp(&mut tape[ptr])')
+    Rustcompiler.add_command('increment', 'inc(&mut tape[ptr], {Num})')
+    Rustcompiler.add_command('move', 'ptr = ptr.strict_add({Num})')
+    Rustcompiler.add_command('#', 'dbg!(tape)')
+    Rustcompiler.add_command('addcheck', ' ', autosemicolon=False)
+    Rustcompiler.add_command('movecheck', ' ', autosemicolon=False)
+    Rustcompiler.add_closing('}', add_indent=-1, semicolon=False)
+    return Rustcompiler
+
 
 if __name__ == '__main__':
     if sys.argv[1].lower() == 'py':
         compiler = makePY()
     elif sys.argv[1].lower() == 'cpp':
         compiler = makeCPP()
+    elif sys.argv[1].lower() == 'rust':
+        compiler = makeRust()
     else:
         raise ValueError('Language does not exist')
     with open(sys.argv[2]) as file:
