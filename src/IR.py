@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import re
 from numpy import base_repr
-<<<<<<< HEAD
 from typing import Tuple
-=======
->>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
 
 # code description     char
 # V     V         /------J
@@ -19,7 +16,6 @@ from typing import Tuple
 # # debug       d1
 
 
-<<<<<<< HEAD
 class Pair:
     def __init__(self, type: str, num: int):
         self.type = type
@@ -27,20 +23,13 @@ class Pair:
 
 
 def IR(program: str, rmcomments: bool = True, input: str = '') -> str:
-=======
-def IR(program: str, rmcomments: bool = True) -> str:
->>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
     result = ''
     program = re.sub(r'[^+-.><\]\[#]', '', program)
     program = re.sub(r'\[\]', '', program)
     if len(program) == 0:
         raise Exception(
-<<<<<<< HEAD
             'Program is either entirely comments, or you ran it through '
             'Byte() twice')
-=======
-            'Program is either entirely comments, or you ran it through Byte() twice')
->>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
     if rmcomments:
         while program[0] == '[':  # removes standard opening comments
             depth = 1
@@ -58,7 +47,6 @@ def IR(program: str, rmcomments: bool = True) -> str:
     while True:
         match program[0]:
             case '[':
-<<<<<<< HEAD
                 result += f's'
             case ']':
                 result += f'e'
@@ -114,81 +102,17 @@ def OptimizePairsP1(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
             break
         if program[pos].type == program[pos + 1].type:
             program[pos].num = program[pos + 1].num
-=======
-                length = len(re.search(r'^[\[]+', program).group())
-                result += f's{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case ']':
-                length = len(re.search(r'^[\]]+', program).group())
-                result += f'e{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case '.':
-                length = len(re.search(r'^[.]+', program).group())
-                result += f'o{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case ',':
-                length = len(re.search(r'^[,]+', program).group())
-                result += f'o-{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case '+':
-                length = len(re.search(r'^[+]+', program).group())
-                result += f'i{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case '-':
-                length = len(re.search(r'^[-]+', program).group())
-                result += f'i-{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case '>':
-                length = len(re.search(r'^[>]+', program).group())
-                result += f'm{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case '<':
-                length = len(re.search(r'^[<]+', program).group())
-                result += f'm-{base_repr(length, 36)}'
-                program = program[length - 1:]
-            case '#':
-                result += 'd1'
-        program = program[1:]
-        if len(program) == 0:
-            break
-    return result
-
-
-def Pair(program: str) -> list:
-    out = []
-    while True:
-        code = [program[0], re.search('[^a-z]+', program[1:]).group(), 36]
-        out.append([code[0], int(code[1], 36)])
-        program = program[len(code[1]) + 1:]
-        if len(program) < 2:
-            break
-    return out
-
-
-def OptimizePairsP1(program: list) -> list:
-    pos = 0
-    while True:
-        if pos > len(program) - 2:
-            break
-        if program[pos][0] == program[pos + 1][0]:
-            program[pos][1] += program[pos + 1][1]
->>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
             program.pop(pos + 1)
         else:
             pos += 1
     pos = 0
     while True:
-<<<<<<< HEAD
         if program[pos].num == 0:
-=======
-        if program[pos][1] == 0:
->>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
             program.pop(pos)
         else:
             pos += 1
         if pos > len(program) - 1:
             break
-<<<<<<< HEAD
     return program, arg[1]
 
 
@@ -265,89 +189,3 @@ def OptimizePairs(program: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
 
 def full_IR(program: str, rmcomments: bool = True) -> Tuple[list[Pair], str]:
     return OptimizePairs(Pairstr(IR(program, rmcomments=rmcomments)))
-
-
-if __name__ == '__main__':
-    print(full_IR('''
-[
-// `  `  `  <  @  1  1  0  1  3  8  5  1  1  0  8  9  8  6  2  2  5  3  6  >
-//          60 64 49 49 48 49 51 56 53 49 49 48 56 57 56 54 50 50 53 51 54 62
-//          == == == == == == == == == == == == == == == == == == == == == ==
-
-// I want:
-// 60-64 48-50 51-57
-// 60 49 51
-]
-++++++++
-[
-    >+++++++
-    >++++++
-    >++++++
-    >++++++++++++
-    <<<<-
-]
-// 00_64 48 48 96
->>>>.
-.
-.
-// 00_56 48 48 96_
-<<<++++.
-// 00 60_48 48 96
-++++.
-// 00 64_48 48 96
->+.
-// 00 64 49_48 96
-.
-// 00 64 49_48 96
--.
-// 00 64 48_48 96
-+.
-// 00 64 49_48 96
->+++.
-// 00 64 49 51_96
-+++++.
-// 00 64 49 56_96
----.
-// 00 64 49 53_96
-<.
-// 00 64 49_53 96
-.
-// 00 64 49_53 96
--.
-// 00 64 48_53 96
->+++.
-// 00 64 48 56_96
-+.
-// 00 64 48 57_96
--.
-// 00 64 48 56_96
---.
-// 00 64 48 54_96
-<++.
-// 00 64 50_54 96
-.
-// 00 64 50_54 96
->-.
-// 00 64 50 53_96
-<+.
-// 00 64 51_53 96
->+.
-// 00 64 51 54_96
-<<--.
-// 00 62_51 54 96
-'''))
-=======
-    return program
-
-
-def OptimizePairsP2(program: list) -> list:
-    return program
-
-
-def OptimizePairs(program: list) -> list:
-    return OptimizePairsP2(OptimizePairsP1(program))
-
-
-def full_IR(program: str, rmcomments: bool = True) -> list:
-    return OptimizePairs(Pair(IR(program, rmcomments=rmcomments)))
->>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
