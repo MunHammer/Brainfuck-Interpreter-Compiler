@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import IR
 import sys
+<<<<<<< HEAD
 from typing import Tuple
+=======
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
 
 # code description     char
 # V     V         /------J
@@ -23,12 +26,21 @@ class Compiler:
         self.__semicolon = autosemicolon
         self.__newline = autonewline
         self.__opening = ''
+<<<<<<< HEAD
         self.__closing: dict[str, dict[str, int]] = {}
         self.__indent = indent
         self.__commands: dict[str, str] = {'[': '', ']': '', '.': '',
                                            ',': '', 'increment': '',
                                            'move': '', '#': '',
                                            'addcheck': '', 'movecheck': ''}
+=======
+        self.__closing = {}
+        self.__indent = indent
+        self.__commands = {'[': None, ']': None, '.': None,
+                           ',': None, 'increment': None,
+                           'move': None, '#': None,
+                           'addcheck': None, 'movecheck': None}
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
 
     def get_opening(self) -> str:
         return self.__opening
@@ -44,11 +56,19 @@ class Compiler:
         if self.__newline and newline:
             self.__opening += '\n'
 
+<<<<<<< HEAD
     def get_closing(self) -> dict[str, dict[str, int]]:
         return self.__closing
 
     def add_closing(self, compiled: str, *, semicolon: int = 1,
                     newline: int = 1, autoindent: int = 1,
+=======
+    def get_closing(self) -> dict:
+        return self.__closing
+
+    def add_closing(self, compiled: str, *, semicolon: bool = True,
+                    newline: bool = True, autoindent: bool = True,
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                     add_indent: int = 0):
         '''change the booleans if there are exceptions to
         rules in the closing'''
@@ -56,7 +76,11 @@ class Compiler:
                                     'autoindent': autoindent,
                                     'add_indent': add_indent}
 
+<<<<<<< HEAD
     def __eval_closing(self, string: str, options: dict[str, int]):
+=======
+    def __eval_closing(self, string: str, options: dict):
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
         if self.__autoindent and options['autoindent']:
             self.result += '    ' * self.__indent
         self.__indent += options['add_indent']
@@ -69,6 +93,7 @@ class Compiler:
         '''For a command such as + that can be repeated quite easily,
         you must use: {Num} to produce more optimised code'''
         match command:
+<<<<<<< HEAD
             case '[' if self.__commands['['] == '' or overwrite:
                 self.__commands['['] = compiled
             case ']' if self.__commands[']'] == '' or overwrite:
@@ -88,6 +113,27 @@ class Compiler:
                                 or overwrite):
                 self.__commands['addcheck'] = compiled
             case 'movecheck' if (self.__commands['movecheck'] == ''
+=======
+            case '[' if self.__commands['['] is None or overwrite:
+                self.__commands['['] = compiled
+            case ']' if self.__commands[']'] is None or overwrite:
+                self.__commands[']'] = compiled
+            case '.' if self.__commands['.'] is None or overwrite:
+                self.__commands['.'] = compiled
+            case ',' if self.__commands[','] is None or overwrite:
+                self.__commands[','] = compiled
+            case 'increment' if (self.__commands['increment'] is None
+                                 or overwrite):
+                self.__commands['increment'] = compiled
+            case 'move' if self.__commands['move'] is None or overwrite:
+                self.__commands['move'] = compiled
+            case '#' if self.__commands['#'] is None or overwrite:
+                self.__commands['#'] = compiled
+            case 'addcheck' if (self.__commands['addcheck'] is None
+                                or overwrite):
+                self.__commands['addcheck'] = compiled
+            case 'movecheck' if (self.__commands['movecheck'] is None
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                                  or overwrite):
                 self.__commands['movecheck'] = compiled
             case _:
@@ -101,23 +147,35 @@ class Compiler:
         if self.__newline:
             self.__commands[command] += '\n'
 
+<<<<<<< HEAD
     def __check_add(self, command: str):
+=======
+    def __check_add(self, command):
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
         if self.__autoindent:
             self.result += ' ' * 4 * self.__indent
         self.result += self.__commands[f'{command}check']
         if self.__newline:
             self.result += '\n'
 
+<<<<<<< HEAD
     def run(self, program: Tuple[list[IR.Pair], str]) -> str:
         code = program[0]
         self.result = self.__opening
         for command in self.__commands:
             if self.__commands[command] == '':
+=======
+    def run(self, code: list) -> str:
+        self.result = self.__opening
+        for command in self.__commands:
+            if self.__commands[command] == None:
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                 raise ValueError('All commands must be added\n'
                                  f'Missing command: {command}')
         for command in code:
             if self.__autoindent:
                 self.result += '    ' * self.__indent
+<<<<<<< HEAD
             match command.type:
                 case 's':
                     try:
@@ -126,6 +184,16 @@ class Compiler:
                         self.__indent += 1
                     except ValueError:
                         for _ in range(command.num):
+=======
+            match command[0]:
+                case 's':
+                    try:
+                        self.result += self.__commands['['].format(
+                            Num=command[1])
+                        self.__indent += 1
+                    except ValueError:
+                        for i in range(command[1]):
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                             self.result += self.__commands['[']
                             self.__indent += 1
                             if self.__autoindent:
@@ -134,14 +202,22 @@ class Compiler:
                     try:
                         self.__indent -= 1
                         self.result += self.__commands[']'].format(
+<<<<<<< HEAD
                             Num=command.num)
                     except ValueError:
                         self.__indent += 1
                         for _ in range(command.num):
+=======
+                            Num=command[1])
+                    except ValueError:
+                        self.__indent += 1
+                        for i in range(command[1]):
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                             self.__indent -= 1
                             self.result += self.__commands[']']
                             if self.__autoindent:
                                 self.result += '    ' * self.__indent
+<<<<<<< HEAD
                 case 'o' if command.num > 0:
                     try:
                         self.result += self.__commands['.'].format(
@@ -157,11 +233,29 @@ class Compiler:
                             Num=command.num)
                     except ValueError:
                         for _ in range(command.num):
+=======
+                case 'o' if command[1] > 0:
+                    try:
+                        self.result += self.__commands['.'].format(
+                            Num=command[1])
+                    except ValueError:
+                        for i in range(command[1]):
+                            self.result += self.__commands['.']
+                            if self.__autoindent:
+                                self.result += '    ' * self.__indent
+                case 'o' if command[1] < 0:
+                    try:
+                        self.result += self.__commands[','].format(
+                            Num=command[1])
+                    except ValueError:
+                        for i in range(command[1]):
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                             self.result += self.__commands[',']
                             if self.__autoindent:
                                 self.result += '    ' * self.__indent
                 case 'i':
                     self.result += self.__commands['increment'].format(
+<<<<<<< HEAD
                         Num=command.num)
                     self.__check_add('add')
                 case 'm':
@@ -170,6 +264,16 @@ class Compiler:
                     self.__check_add('move')
                 case 'd':
                     self.result += self.__commands['#'].format(Num=command.num)
+=======
+                        Num=command[1])
+                    self.__check_add('add')
+                case 'm':
+                    self.result += self.__commands['move'].format(
+                        Num=command[1])
+                    self.__check_add('move')
+                case 'd':
+                    self.result += self.__commands['#'].format(Num=command[1])
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
                 case _:
                     raise ValueError('Invalid code')
         for closing in self.__closing:
@@ -270,6 +374,7 @@ if __name__ == '__main__':
     else:
         raise ValueError('Language does not exist')
     with open(sys.argv[2]) as file:
+<<<<<<< HEAD
         programstr: str = ''
         for line in file:
             programstr += line
@@ -280,6 +385,18 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         with open(sys.argv[3], 'w') as file:
             file.write(programout)
+=======
+        program = ''
+        for line in file:
+            program += line
+    print('Encoding & optimising program...')
+    program = IR.full_IR(program)
+    print(f'Turning code into a {sys.argv[1]} program')
+    program = compiler.run(program)
+    if len(sys.argv) > 3:
+        with open(sys.argv[3], 'w') as file:
+            file.write(program)
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
     else:
         print('Your file outputted:')
         print(program)

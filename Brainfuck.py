@@ -17,8 +17,11 @@ if __name__ == '__main__':
                     program = ''
                     for line in file:
                         program += line
+<<<<<<< HEAD
             else:
                 program = sys.argv[4]
+=======
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
             print('Encoding & optimising program...')
             program = IR.full_IR(program)
             print(f'Turning code into a {sys.argv[3]} program')
@@ -33,7 +36,10 @@ if __name__ == '__main__':
         elif sys.argv[2].lower() == 'interpret':
             if len(sys.argv) == 3:
                 BFInterpreter.repl()
+<<<<<<< HEAD
                 sys.exit(0)
+=======
+>>>>>>> 5050f2239228a59f5b2cb61258247a2bbb5569d7
             elif sys.argv[3][-2:] == '.b' or sys.argv[3][-3:] == '.bf':
                 with open(sys.argv[3]) as file:
                     program = ''
