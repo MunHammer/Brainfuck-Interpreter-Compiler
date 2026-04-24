@@ -1,58 +1,55 @@
 #!/usr/bin/env python3
 import BFCompiler
-import BFInterpreter
 import IR
 import sys
+import argparse
+import pathlib
+import logging
+
+logger = logging.getLogger(__name__)
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='BFTranspiler',
+        description="A brainfuck transpiler that supports a number of targets",
+        suggest_on_error = True,
+        color = True,
+        )
+    parser.add_argument("input", type=pathlib.Path, help="File to read from")
+    parser.add_argument("-t", "--target", nargs="?", choices=["py", "c", "cpp", "rust"], default="py", help="Target language to transpile to")
+    parser.add_argument("-o", "--output", nargs="?", type=pathlib.Path, help="File to write output to", default="a.out")
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Increases verbosity up to a level of two")
+    args = parser.parse_args()
+    try:
+        logging.basicConfig(level=[logging.WARNING, logging.INFO, logging.DEBUG][args.verbose])
+    except IndexError:
+        logging.basicConfig(level=logging.DEBUG)
+        logger.warning("Maximum verbosity is two, verbosity set to two")
+    logger.info("Assembling transpiler")
+    print("Compiling...")
+    match args.target:
+        case "py":
+            transpiler = BFCompiler.makePY()
+        case "c":
+            # TODO: add C
+            raise ValueError("TODO: add C")
+        case "cpp":
+            transpiler = BFCompiler.makeCPP()
+        case "rust":
+            transpiler = BFCompiler.makeRust()
+        case _:
+            raise ValueError("language does not exist")
+    logger.info("Reading input file")
+    with open(args.input, "r") as file:
+        program = file.read()
+    logger.info("Encoding & optimising program")
+    program = IR.full_IR(program)
+    logger.info("Compiling program")
+    OUTPUT = transpiler.run(program)
+    with open(args.output, "w") as file:
+        file.write(OUTPUT)
+    print("Compilation completed!")
+
 if __name__ == '__main__':
-    if sys.argv[1].lower() == 'bf':
-        if sys.argv[2].lower() == 'compile':
-            if sys.argv[3].lower() == 'py':
-                compiler = BFCompiler.makePY()
-            elif sys.argv[3].lower() == 'cpp':
-                compiler = BFCompiler.makeCPP()
-            elif sys.argv[3].lower() == 'rust':
-                compiler = BFCompiler.makeRust()
-            else:
-                raise ValueError('Language does not exist')
-            if sys.argv[4][-2:] == '.b' or sys.argv[4][-3:] == '.bf':
-                with open(sys.argv[4]) as file:
-                    program = ''
-                    for line in file:
-                        program += line
-            else:
-                program = sys.argv[4]
-            print('Encoding & optimising program...')
-            program = IR.full_IR(program)
-            print(f'Turning code into a {sys.argv[3]} program')
-            program = compiler.run(program)
-            if len(sys.argv) > 5:
-                with open(sys.argv[5], 'w') as file:
-                    file.write(program)
-            else:
-                print('Your file outputted:')
-                print(program)
-            print('\nDone!')
-        elif sys.argv[2].lower() == 'interpret':
-            if len(sys.argv) == 3:
-                BFInterpreter.repl()
-                sys.exit(0)
-            elif sys.argv[3][-2:] == '.b' or sys.argv[3][-3:] == '.bf':
-                with open(sys.argv[3]) as file:
-                    program = ''
-                    for line in file:
-                        program += line
-            else:
-                program = sys.argv[3]
-            print('Encoding & optimising program...')
-            program = IR.full_IR(program)
-            print(f'Interpreting program...')
-            if len(sys.argv) < 5:
-                print('Your file outputted:')
-                BFInterpreter.Interpret(program)
-                print()
-            else:
-                with open(sys.argv[4], 'w') as file:
-                    file.write(BFInterpreter.Interpret(program))
-                print(f'Output written to {sys.argv[4]}')
-    elif sys.argv[1].lower() == 'bf++':
-        print('Not implemented yet')
+    main()
+    sys.exit(0)
