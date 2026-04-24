@@ -2,3 +2,4 @@
 - [X] ~~I will try to get better at github~~
 - [ ] ~~I will try to make some brainfuck derivatives to make programming in brainfuck easier~~ (not doing anymore)
 - [ ] I will add C for portability
+- [ ] Downscale (remove interpreter & rely more on std library)
