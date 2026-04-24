@@ -2,7 +2,9 @@
 import re
 from numpy import base_repr
 from typing import Tuple
+import logging
 
+logger = logging.getLogger(__name__)
 # code description     char
 # V     V         /------J
 # [ loop start  s1
@@ -66,15 +68,14 @@ def IR(program: str, rmcomments: bool = True, input: str = '') -> str:
                 result += 'd1'
             case _:
                 pass
-        length = re.search(f'^[\{program[0]}]+', program)
+        length = re.search(f'^[\\{program[0]}]+', program)
         if length is None:
-            print(program)
+            logger.debug(program)
             raise Exception(
                 'You may have changed the code in some way or run it in a version where it does not work')
         length = len(length.group())
         result += str(base_repr(length, 36))
         program = program[length:]
-        print(len(program))
         if len(program) == 0:
             break
     return result + f'!{input}'
@@ -87,7 +88,7 @@ def Pairstr(program: str) -> Tuple[list[Pair], str]:
             break
         code = re.search('[^a-z!]+', program[1:])
         if code is None:
-            print(program)
+            logger.debug(program)
             break
         length = len(code.group())
         code = Pair(program[0], int(code.group(), 36))
@@ -119,8 +120,9 @@ def OptimizePairsP1(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
 
 
 def OptimizePairsP2(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
+    logger.debug("Pairs")
     for thing in arg[0]:
-        print(thing.type, thing.num)
+        logger.debug(f"{thing.type} {thing.num}")
     program = arg[0]
     tape = [0]*30000
     ptr: int = 0
@@ -175,7 +177,7 @@ def OptimizePairsP2(arg: Tuple[list[Pair], str]) -> Tuple[list[Pair], str]:
             case 'd':
                 pass
             case _:
-                print(code.type)
+                logger.debug(code.type)
                 raise Exception('Invalid IR')
         pos += 1
         if pos > len(program) - 1:
