@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import IR
-import sys
 from typing import Tuple
 
 # code description     char
@@ -299,29 +298,3 @@ def makeRust():
     Rustcompiler.add_command('movecheck', ' ', autosemicolon=False)
     Rustcompiler.add_closing('}', add_indent=-1, semicolon=False)
     return Rustcompiler
-
-
-if __name__ == '__main__':
-    if sys.argv[1].lower() == 'py':
-        compiler = makePY()
-    elif sys.argv[1].lower() == 'cpp':
-        compiler = makeCPP()
-    elif sys.argv[1].lower() == 'rust':
-        compiler = makeRust()
-    else:
-        raise ValueError('Language does not exist')
-    with open(sys.argv[2]) as file:
-        programstr: str = ''
-        for line in file:
-            programstr += line
-    print('Encoding & optimising program...')
-    program: list[IR.Pair] = IR.full_IR(programstr)
-    print(f'Turning code into a {sys.argv[1]} program')
-    programout = compiler.run(program)
-    if len(sys.argv) > 3:
-        with open(sys.argv[3], 'w') as file:
-            file.write(programout)
-    else:
-        print('Your file outputted:')
-        print(program)
-    print('\nDone!')
