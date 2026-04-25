@@ -41,9 +41,13 @@ def main():
         help="Increases verbosity up to a level of two",
     )
     args = parser.parse_args()
+    # make sure all of the arguments are the correct type & stisfy type checkers
+    assert isinstance(args.verbose, int)
+    assert isinstance(args.output, pathlib.Path)
+    assert isinstance(args.input, pathlib.Path)
     try:
         logging.basicConfig(
-            level=[logging.WARNING, logging.INFO, logging.DEBUG][args.verbose]
+            level=[logging.WARNING, logging.INFO, logging.DEBUG][args.verbose],
         )
     except IndexError:
         logging.basicConfig(level=logging.DEBUG)

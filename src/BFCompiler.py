@@ -28,7 +28,7 @@ class Compiler:
         self.__semicolon = autosemicolon
         self.__newline = autonewline
         self.__opening = ""
-        self.__closing: dict[str, dict[str, int]] = {}
+        self.__closing: dict[str, dict[str, bool | int]] = {}
         self.__indent = indent
         self.__commands: dict[str, str] = {
             "[": "",
@@ -62,7 +62,7 @@ class Compiler:
         if self.__newline and newline:
             self.__opening += "\n"
 
-    def get_closing(self) -> dict[str, dict[str, int]]:
+    def get_closing(self) -> dict[str, dict[str, bool | int]]:
         return self.__closing
 
     def add_closing(
@@ -83,7 +83,7 @@ class Compiler:
             "add_indent": add_indent,
         }
 
-    def __eval_closing(self, string: str, options: dict[str, bool]):
+    def __eval_closing(self, string: str, options: dict[str, int | bool]):
         if self.__autoindent and options["autoindent"]:
             self.result += "    " * self.__indent
         self.__indent += options["add_indent"]
@@ -142,7 +142,7 @@ class Compiler:
 
     def run(self, program: Tuple[list[IR.Pair], str]) -> str:
         code = program[0]
-        self.result = self.__opening
+        self.result: str = self.__opening
         for command in self.__commands:
             if self.__commands[command] == "":
                 raise ValueError(
